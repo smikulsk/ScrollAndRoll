@@ -10,7 +10,7 @@ local scene = composer.newScene()
 
 local physics = require "physics"
 local screenW, screenH, halfW = display.actualContentWidth, display.actualContentHeight, display.contentCenterX
-local joystickMidX, joystickBaseSize, joystickSize = 0, 152.2, 71.5;
+local joystickMidX, joystickBaseSize, joystickSize = 0, 305, 143;
 
 local sheetOptions =
 {
