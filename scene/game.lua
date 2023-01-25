@@ -8,66 +8,18 @@ local scene = composer.newScene()
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
-local physics = require "physics"
+local physics = require("physics")
+local joystick = require("ui.joystick")
+
 local screenW, screenH, halfW = display.actualContentWidth, display.actualContentHeight, display.contentCenterX
-local joystickMidX, joystickBaseSize, joystickSize = 0, 305, 143;
-
-local sheetOptions =
-{
-    frames =
-    {
-        {   -- 1) base
-            x = 48,
-            y = 36,
-            width = 305,
-            height = 305
-        },
-		{   -- 2) stick
-            x = 129,
-            y = 740,
-            width = 143,
-            height = 143
-        },
-	}
-}
-local objectSheet = graphics.newImageSheet( "JoystickPack.png", sheetOptions )
-
-local joystick
 local speedText
 local playerSpeed = 0
 
-local function dragJoystick( event )
- 
-    local ship = event.target
-    local phase = event.phase
-
-	if ( "began" == phase ) then
-        -- Set touch focus on the joystick
-        display.currentStage:setFocus( joystick )
-		-- Store initial offset position
-        ship.touchOffsetX = event.x - joystick.x
-    elseif ( "moved" == phase ) then
-        -- Move the joystick to the new touch position
-        joystick.x = math.max(
-			math.min(
-				event.x - joystick.touchOffsetX, 
-				joystickMidX + (joystickBaseSize - joystickSize)/2
-			), 
-			joystickMidX - (joystickBaseSize - joystickSize)/2
-		)
-    elseif ( "ended" == phase or "cancelled" == phase ) then
-        -- Release touch focus on the ship
-        display.currentStage:setFocus( nil )
-		joystick.x = joystickMidX
-    end
-
-	playerSpeed = joystick.x - joystickMidX
+function joystickMoved(event)		
+	playerSpeed = event.xDiff
 	speedText.text = "Player speed: " .. playerSpeed
-	print(speedText.text)
-	
-	return true  -- Prevents touch propagation to underlying objects
-end
-
+	print(speedText.text)		
+end 
 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -82,7 +34,6 @@ function scene:create( event )
 	physics.pause()
 
 	local backGroup = display.newGroup()  -- Display group for the background image
-	--local mainGroup = display.newGroup()  -- Display group for the ship, asteroids, lasers, etc.
 	local uiGroup = display.newGroup()    -- Display group for UI objects like the score
 
 	local background = display.newRect( backGroup, display.screenOriginX, display.screenOriginY, screenW, screenH )
@@ -90,18 +41,14 @@ function scene:create( event )
 	background.anchorY = 0
 	background:setFillColor( 0, 0, 0.5 )
 
-	local joystick_base = display.newImageRect( uiGroup, objectSheet, 1, joystickBaseSize, joystickBaseSize )
-	joystick_base.x, joystick_base.y = 0, screenH - joystickBaseSize/2 - 50
-
-	joystick = display.newImageRect( uiGroup, objectSheet, 2, joystickSize, joystickSize )
-	joystick.x, joystick.y = joystickMidX, screenH - joystickBaseSize/2 - 50
+	joystick.create(uiGroup, screenH)
 
 	speedText = display.newText( uiGroup, "Player speed: " .. playerSpeed, 200, 80, native.systemFont, 36 )
-	
+
 	sceneGroup:insert( backGroup )
 	sceneGroup:insert( uiGroup )
 
-	joystick:addEventListener( "touch", dragJoystick )
+	joystick.eventDispatcher:addEventListener("joystickMoved", joystickMoved)
 end
 
 
